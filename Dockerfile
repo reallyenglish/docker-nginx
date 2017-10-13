@@ -65,16 +65,23 @@ RUN apt-get update \
     && make \
     && make install \
   # remove tools used for building
-    && apt-get remove --purge --auto-remove -y build-essential curl \
-  && cd / \
-    && rm -rf /build \
-    && rm -rf /var/lib/apt/lists/* \
-  && nginx -V
+    && apt-get remove --purge --auto-remove -y build-essential curl
 
-RUN useradd --no-create-home nginx \
+WORKDIR /
+
+COPY nginx.conf ./etc/nginx/
+
+RUN mkdir /etc/nginx/conf.d \
+  && useradd --no-create-home nginx \
   && mkdir -p /var/cache/nginx \
   && ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log
+	&& ln -sf /dev/stderr /var/log/nginx/error.log \
+  && rm /etc/nginx/*.default \
+  && rm /etc/nginx/fastcgi.conf* \
+  && rm -rf /build \
+  && rm -rf /var/lib/apt/lists/* \
+  && nginx -V \
+  && nginx -t
 
 EXPOSE 80
 
